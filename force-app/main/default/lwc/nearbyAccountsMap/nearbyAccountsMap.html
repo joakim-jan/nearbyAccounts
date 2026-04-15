@@ -1,0 +1,177 @@
+<template>
+    <lightning-card title="Nearby Accounts" icon-name="standard:account">
+        <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+            <div class="slds-grid slds-wrap slds-gutters slds-grid_vertical-align-end">
+                <template lwc:if={isStandalone}>
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_6-of-12">
+                        <lightning-record-picker
+                            label="Center account"
+                            placeholder="Search Accounts"
+                            object-api-name="Account"
+                            value={selectedAccountId}
+                            onchange={handleAccountSelect}>
+                        </lightning-record-picker>
+                    </div>
+                </template>
+
+                <template lwc:else>
+                    <div class="slds-col slds-size_1-of-1 slds-large-size_6-of-12">
+                        <lightning-input
+                            type="text"
+                            label="Center account"
+                            value={centerAccountName}
+                            disabled>
+                        </lightning-input>
+                    </div>
+                </template>
+
+                <div class="slds-col slds-size_1-of-1 slds-large-size_2-of-12">
+                    <lightning-input
+                        type="number"
+                        label="Radius (km)"
+                        min="1"
+                        step="1"
+                        value={radiusKm}
+                        onchange={handleRadiusChange}>
+                    </lightning-input>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+                    <div class="slds-grid slds-wrap slds-gutters_x-small slds-grid_vertical-align-end">
+                        <div class="slds-col slds-grow-none">
+                            <lightning-button
+                                label="Search"
+                                variant="brand"
+                                onclick={handleSearchClick}>
+                            </lightning-button>
+                        </div>
+
+                        <div class="slds-col slds-grow-none">
+                            <lightning-button
+                                label="Open itinerary in Google Maps"
+                                onclick={handleOpenGoogleMaps}
+                                disabled={isItineraryDisabled}>
+                            </lightning-button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <template lwc:if={selectionSummary}>
+                <p class="slds-text-body_small slds-m-top_x-small">
+                    {selectionSummary}
+                </p>
+            </template>
+
+            <template lwc:if={errorMessage}>
+                <div class="slds-text-color_error slds-m-top_small">
+                    {errorMessage}
+                </div>
+            </template>
+        </div>
+
+        <template lwc:if={isLoading}>
+            <lightning-spinner alternative-text="Searching nearby accounts"></lightning-spinner>
+        </template>
+
+        <template lwc:elseif={showInitialState}>
+            <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                <div class="slds-box slds-theme_shade slds-text-align_center slds-p-around_medium">
+                    <lightning-icon icon-name="utility:info" size="small" class="slds-m-bottom_small"></lightning-icon>
+                    <p class="slds-text-heading_small slds-m-bottom_small">
+                        Ready to Find Nearby Accounts
+                    </p>
+                    <p class="slds-text-body_small slds-m-bottom_x-small">
+                        Click <strong>Search</strong> to find accounts within the specified radius.
+                    </p>
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        <strong>Note:</strong> Accounts must have geocoded Billing Addresses (Billing Latitude/Longitude populated).
+                    </p>
+                </div>
+            </div>
+        </template>
+
+        <template lwc:elseif={hasResults}>
+            <div class="slds-grid slds-wrap slds-gutters slds-p-horizontal_medium slds-p-bottom_medium">
+                <div class="slds-col slds-size_1-of-1 slds-large-size_8-of-12">
+                    <div class="map-panel">
+                        <lightning-map
+                            map-markers={mapMarkers}
+                            markers-title="Accounts"
+                            list-view="hidden"
+                            selected-marker-value={selectedMarkerValue}
+                            onmarkerselect={handleMarkerSelect}
+                            zoom-level="10">
+                        </lightning-map>
+                    </div>
+                </div>
+
+                <div class="slds-col slds-size_1-of-1 slds-large-size_4-of-12">
+                    <div class="list-panel slds-box slds-theme_default">
+                        <div class="list-panel__header slds-p-around_small slds-text-title_bold">
+                            Accounts within {radiusKm} km ({results.length})
+                        </div>
+
+                        <template for:each={results} for:item="acc">
+                            <div key={acc.id} class={acc.rowClass}>
+                                <div class="slds-grid slds-gutters_x-small slds-grid_vertical-align-center">
+                                    <div class="slds-col slds-grow-none">
+                                        <lightning-input
+                                            type="checkbox"
+                                            label="Select for itinerary"
+                                            variant="label-hidden"
+                                            data-id={acc.id}
+                                            checked={acc.checked}
+                                            disabled={acc.checkboxDisabled}
+                                            onchange={handleToggleSelect}>
+                                        </lightning-input>
+                                    </div>
+
+                                    <div class="slds-col">
+                                        <button
+                                            class="result-row__name-button"
+                                            data-id={acc.id}
+                                            onclick={handleFocusMarker}>
+                                            {acc.name}
+                                        </button>
+                                    </div>
+
+                                    <template lwc:if={acc.selectionOrder}>
+                                        <div class="slds-col slds-grow-none">
+                                            <span class="result-row__order-pill">{acc.selectionOrder}</span>
+                                        </div>
+                                    </template>
+                                </div>
+
+                                <div class="slds-text-body_small slds-m-left_large slds-m-top_xx-small">
+                                    {acc.distanceLabel}
+                                </div>
+
+                                <div class="slds-text-body_small slds-m-left_large slds-m-top_xx-small">
+                                    {acc.addressLabel}
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+                </div>
+            </div>
+        </template>
+
+        <template lwc:else>
+            <div class="slds-p-horizontal_medium slds-p-bottom_medium">
+                <div class="slds-box slds-theme_shade slds-text-align_center slds-p-around_medium">
+                    <lightning-icon icon-name="utility:warning" size="small" variant="warning" class="slds-m-bottom_small"></lightning-icon>
+                    <p class="slds-text-heading_small slds-m-bottom_small">
+                        No Accounts Found
+                    </p>
+                    <p class="slds-text-body_small slds-m-bottom_x-small">
+                        No accounts were found within {radiusKm} km of the selected account.
+                    </p>
+                    <p class="slds-text-body_small slds-text-color_weak">
+                        Try increasing the search radius or ensure nearby accounts have geocoded Billing Addresses.
+                    </p>
+                </div>
+            </div>
+        </template>
+    </lightning-card>
+</template>
