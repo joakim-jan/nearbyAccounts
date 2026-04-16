@@ -32,9 +32,7 @@ When placed on an Account record page, automatically uses the current account as
 ### Itinerary Generation
 Select up to 10 accounts and generate a Google Maps driving directions URL with optimized waypoints.
 
-
-
-
+> **Note:** Add screenshots or GIFs of your component in action to this section.
 
 ## 📦 What's Included
 
