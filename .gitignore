@@ -1,0 +1,38 @@
+# Salesforce cache
+.sf/
+.sfdx/
+.localdevserver/
+
+# LWC VSCode autocomplete
+**/lwc/jsconfig.json
+
+# LWC Jest coverage
+coverage/
+
+# Logs
+*.log
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+*.iml
+
+# npm
+node_modules/
+package-lock.json
+
+# Scratch org files
+.vscode/settings.json
+config/
+
+# Env files
+.env
+.env.local
+
+# Backup files
+*.bak
+*.tmp
